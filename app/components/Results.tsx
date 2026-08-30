@@ -8,11 +8,12 @@ type Props = {
   answers: Answers;
   budget: Budget;
   recommendations: Recommendation[];
+  periodLabel: string;
   onEdit: () => void;
   onScenario: (kind: 'budget' | 'age' | 'commute' | 'rooms') => void;
 };
 
-export default function Results({ answers, budget, recommendations, onEdit, onScenario }: Props) {
+export default function Results({ answers, budget, recommendations, periodLabel, onEdit, onScenario }: Props) {
   const [expanded, setExpanded] = useState(0);
   const [copied, setCopied] = useState('');
   const copy = async (value: string) => {
@@ -30,7 +31,7 @@ export default function Results({ answers, budget, recommendations, onEdit, onSc
   return <div className="tech-shell min-h-[70svh] py-12 md:py-16">
     <div className="content-container relative z-10">
       <section className="scroll-focus-zone scroll-tone-dark flex flex-wrap items-end justify-between gap-6 py-3" data-scroll-focus data-scroll-active="false">
-        <div><p className="eyebrow">Your First-Home Report</p><h1 className="display-title mt-3 text-4xl md:text-5xl">台中可行購屋方向</h1><p className="body-copy mt-4 max-w-3xl text-sm">以2026年上半年台中實價成交統計為基準，先通過必要條件，再進行加權排序。</p></div>
+        <div><p className="eyebrow">Your First-Home Report</p><h1 className="display-title mt-3 text-4xl md:text-5xl">台中可行購屋方向</h1><p className="body-copy mt-4 max-w-3xl text-sm">以{periodLabel}的台中實價成交統計為基準，先通過必要條件，再進行加權排序。</p></div>
         <button onClick={onEdit} className="btn-secondary">修改需求</button>
       </section>
 

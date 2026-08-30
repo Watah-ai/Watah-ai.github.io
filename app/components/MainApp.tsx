@@ -85,7 +85,7 @@ function Home({ onStart, onExample, onMarket }: { onStart: () => void; onExample
           <h2 className="font-data font-bold">資料支持的決策</h2>
           <p className="mt-1 text-xs text-[#94a3b8]">每項結果標示來源、期間與可信度。</p>
         </div>
-        {['2026上半年實價成交', 'Hard Gate 必要條件', '可展開驗算的推薦'].map((item) => <div key={item} className="feature-row-item flex items-center border-b border-[#263246] py-5 text-sm font-bold text-[#72c7f2]"><span className="mr-3 text-[#ff6b57]">+</span>{item}</div>)}
+        {[`${market.metadata.periodLabel}實價成交`, 'Hard Gate 必要條件', '可展開驗算的推薦'].map((item) => <div key={item} className="feature-row-item flex items-center border-b border-[#263246] py-5 text-sm font-bold text-[#72c7f2]"><span className="mr-3 text-[#ff6b57]">+</span>{item}</div>)}
       </div>
     </section>
 
@@ -167,7 +167,7 @@ export default function MainApp() {
 
     {view === 'home' && <Home onStart={startAnalysis} onExample={example} onMarket={() => navigate('market')} />}
     {view === 'questionnaire' && <div className="scroll-focus-zone scroll-tone-dark tech-shell px-4 py-9 md:py-14" data-scroll-focus data-scroll-active="false"><Questionnaire answers={answers} step={step} onChange={setAnswers} onStep={setStep} onClose={() => navigate('home')} onComplete={() => { trackAnalyticsEvent('complete_analysis'); navigate('results'); }} /></div>}
-    {view === 'results' && <Results answers={answers} budget={budget} recommendations={recommendations} onEdit={() => navigate('questionnaire')} onScenario={applyScenario} />}
+    {view === 'results' && <Results answers={answers} budget={budget} recommendations={recommendations} periodLabel={market.metadata.periodLabel} onEdit={() => navigate('questionnaire')} onScenario={applyScenario} />}
     {view === 'market' && <MarketDashboard data={market} />}
     {view === 'method' && <MethodPage data={market} />}
 

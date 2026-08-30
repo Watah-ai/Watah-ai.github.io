@@ -5,9 +5,9 @@ export default function MarketDashboard({ data }: { data: MarketData }) {
   return <div className="tech-shell min-h-[70svh] py-12 md:py-16">
     <div className="content-container relative z-10">
       <section className="scroll-focus-zone scroll-tone-dark py-3" data-scroll-focus data-scroll-active="false">
-        <p className="eyebrow">Taichung Market / 2026 H1</p>
+        <p className="eyebrow">Taichung Market / {data.metadata.shortPeriodLabel}</p>
         <h1 className="display-title mt-3 text-4xl md:text-5xl">台中行政區成交概況</h1>
-        <p className="body-copy mt-4 max-w-3xl text-sm">以{data.metadata.period}住宅用途成交資料計算。以下是成交統計，不是目前待售開價。</p>
+        <p className="body-copy mt-4 max-w-3xl text-sm">以資料涵蓋期間 {data.metadata.period} 的住宅用途成交資料計算。以下是成交統計，不是目前待售開價。</p>
       </section>
 
       <section className="scroll-focus-zone scroll-tone-light mt-10 grid gap-7 py-4 lg:grid-cols-[1fr_320px]" data-scroll-focus data-scroll-active="false">

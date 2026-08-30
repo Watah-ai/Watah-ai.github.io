@@ -25,11 +25,12 @@ export default function MethodPage({ data }: { data: MarketData }) {
         <dl className="mt-6 grid gap-px overflow-hidden rounded-lg border border-[#263246] bg-[#263246] text-sm sm:grid-cols-2">
           {[
             ['資料集', data.metadata.title],
-            ['資料期間', data.metadata.period],
+            ['資料涵蓋期間', data.metadata.period],
             ['提供機關', data.metadata.source],
             ['授權', data.metadata.license],
           ].map(([label, value]) => <div key={label} className="bg-[#111b2a] p-4"><dt className="font-data text-xs text-[#7f8fa6]">{label}</dt><dd className="mt-2 font-bold text-[#eef3f8]">{value}</dd></div>)}
         </dl>
+        <p className="body-copy mt-5 text-sm">{data.metadata.note}</p>
         <a href={data.metadata.sourceUrl} target="_blank" rel="noreferrer" className="btn-primary mt-6">查看政府資料集 ↗</a>
       </section>
 

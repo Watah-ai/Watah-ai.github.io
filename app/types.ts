@@ -45,7 +45,11 @@ export type MarketData = {
     source: string;
     sourceUrl: string;
     license: string;
+    coverageStart: string;
+    coverageEnd: string;
     period: string;
+    periodLabel: string;
+    shortPeriodLabel: string;
     generatedFromRows: number;
     note: string;
   };

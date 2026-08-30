@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import calendar
 import csv
 import json
 import math
+import re
 import sys
 from collections import defaultdict
+from datetime import date
 from pathlib import Path
 from statistics import median
 
@@ -35,12 +38,64 @@ def rounded_median(values: list[float], digits: int = 1) -> float:
     return round(median(values), digits)
 
 
+def coverage_from_inputs(input_paths: list[Path]) -> dict[str, str]:
+    parsed: list[tuple[int, int]] = []
+    for input_path in input_paths:
+        match = re.fullmatch(r"(?P<roc_year>\d{3})-q(?P<quarter>[1-4])", input_path.stem, re.IGNORECASE)
+        if not match:
+            raise SystemExit(
+                f"cannot derive coverage from {input_path.name}; "
+                "use filenames such as 115-q1.csv"
+            )
+        parsed.append((int(match.group("roc_year")), int(match.group("quarter"))))
+
+    roc_years = {item[0] for item in parsed}
+    if len(roc_years) != 1:
+        raise SystemExit("all input files must belong to the same ROC calendar year")
+
+    quarters = sorted({item[1] for item in parsed})
+    if len(quarters) != len(parsed):
+        raise SystemExit("input quarters must not contain duplicates")
+    expected = list(range(quarters[0], quarters[-1] + 1))
+    if quarters != expected:
+        raise SystemExit("input quarters must be consecutive")
+
+    roc_year = roc_years.pop()
+    year = roc_year + 1911
+    start_month = (quarters[0] - 1) * 3 + 1
+    end_month = quarters[-1] * 3
+    coverage_start = date(year, start_month, 1)
+    coverage_end = date(year, end_month, calendar.monthrange(year, end_month)[1])
+
+    if quarters == [1, 2]:
+        short_period_label = f"{year} H1"
+    elif quarters == [3, 4]:
+        short_period_label = f"{year} H2"
+    elif quarters == [1, 2, 3, 4]:
+        short_period_label = str(year)
+    elif len(quarters) == 1:
+        short_period_label = f"{year} Q{quarters[0]}"
+    else:
+        short_period_label = f"{year} Q{quarters[0]}–Q{quarters[-1]}"
+
+    quarter_title = f"第{quarters[0]}季" if len(quarters) == 1 else f"第{quarters[0]}季至第{quarters[-1]}季"
+    return {
+        "title": f"臺中市不動產實價登錄資訊－{roc_year}年買賣案件（{quarter_title}）",
+        "coverageStart": coverage_start.isoformat(),
+        "coverageEnd": coverage_end.isoformat(),
+        "period": f"{coverage_start.isoformat()} 至 {coverage_end.isoformat()}",
+        "periodLabel": f"{year} 年 {start_month}–{end_month} 月",
+        "shortPeriodLabel": short_period_label,
+    }
+
+
 def main() -> None:
     if len(sys.argv) < 3:
         raise SystemExit("usage: aggregate_real_estate.py INPUT.csv [INPUT.csv ...] OUTPUT.json")
 
     input_paths = [Path(value) for value in sys.argv[1:-1]]
     output_path = Path(sys.argv[-1])
+    coverage = coverage_from_inputs(input_paths)
     buckets: dict[tuple[str, str, int], list[dict[str, float]]] = defaultdict(list)
     district_buckets: dict[str, list[dict[str, float]]] = defaultdict(list)
     accepted = 0
@@ -113,11 +168,15 @@ def main() -> None:
 
     payload = {
         "metadata": {
-            "title": "臺中市不動產實價登錄資訊－115年買賣案件（上半年）",
+            "title": coverage["title"],
             "source": "臺中市政府地政局／政府資料開放平臺",
             "sourceUrl": "https://data.gov.tw/dataset/103038",
             "license": "政府資料開放授權條款－第1版",
-            "period": "2026-01-01 至 2026-06-30",
+            "coverageStart": coverage["coverageStart"],
+            "coverageEnd": coverage["coverageEnd"],
+            "period": coverage["period"],
+            "periodLabel": coverage["periodLabel"],
+            "shortPeriodLabel": coverage["shortPeriodLabel"],
             "generatedFromRows": accepted,
             "note": "僅保留住家用途、常見住宅型態與合理數值範圍，統計不等同即時待售行情或銀行鑑價。",
         },
