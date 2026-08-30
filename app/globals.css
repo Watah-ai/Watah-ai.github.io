@@ -484,6 +484,28 @@ input:focus-visible {
 
 input[type='range'] { accent-color: var(--coral); }
 
+.music-license-marks {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--moon-blue);
+}
+
+.music-license-marks > span {
+  display: inline-flex;
+  width: 1.55rem;
+  height: 1.55rem;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
 @media (max-width: 767px) {
   .analytics-consent {
     bottom: 5.25rem;

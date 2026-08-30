@@ -172,7 +172,17 @@ export default function MainApp() {
     {view === 'method' && <MethodPage data={market} />}
 
     <footer className="scroll-focus-zone scroll-tone-light tech-shell border-t border-[#263246]" data-scroll-focus data-scroll-active="false">
-      <div className="content-container relative z-10 flex flex-wrap items-center justify-between gap-3 py-8 font-data text-xs text-[#7f8fa6]"><span>好宅指南・台中首購適居分析企業專題</span><span>資料僅供決策參考，不構成鑑價、授信或購屋建議。</span></div>
+      <div className="content-container relative z-10 py-8 font-data text-xs text-[#7f8fa6]">
+        <div className="flex flex-wrap items-center justify-between gap-3"><span>好宅指南・台中首購適居分析企業專題</span><span>資料僅供決策參考，不構成鑑價、授信或購屋建議。</span></div>
+        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-[#263246] pt-5" aria-label="背景音樂授權資訊">
+          <span>Music: Moonlight Sonata — Paul Pitman</span>
+          <span className="music-license-marks" aria-hidden="true">
+            <span>CC</span>
+            <span>PD</span>
+          </span>
+          <span>Public Domain</span>
+        </div>
+      </div>
     </footer>
   </main>;
 }
