@@ -15,8 +15,8 @@ type Props = {
 const buildings: BuildingType[] = ['住宅大樓', '華廈', '公寓', '透天厝'];
 const hubs = ['市政府', '台中車站', '中科', '高鐵台中站', '豐原車站'];
 
-function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint, onChange }: {
-  label: string; value: number; unit: string; min?: number; max?: number; step?: number; hint?: string; onChange: (value: number) => void;
+function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint, selectOnFocus = false, deferMinWhileEditing = false, onChange }: {
+  label: string; value: number; unit: string; min?: number; max?: number; step?: number; hint?: string; selectOnFocus?: boolean; deferMinWhileEditing?: boolean; onChange: (value: number) => void;
 }) {
   const fieldId = useId();
   const hintId = `${fieldId}-hint`;
@@ -24,7 +24,7 @@ function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint,
 
   const updateDraft = (rawValue: string) => {
     if (rawValue === '') {
-      setDraft(String(min));
+      setDraft(deferMinWhileEditing ? '' : String(min));
       onChange(min);
       return;
     }
@@ -36,6 +36,12 @@ function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint,
       : rawValue.replace(/^0+(?=\d)/, '');
     const nextValue = Number(normalized);
     if (!Number.isFinite(nextValue)) return;
+
+    if (deferMinWhileEditing && nextValue < min) {
+      setDraft(normalized);
+      onChange(min);
+      return;
+    }
 
     const boundedValue = Math.min(max, Math.max(min, nextValue));
     setDraft(boundedValue === nextValue ? normalized : String(boundedValue));
@@ -55,8 +61,14 @@ function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint,
         role="spinbutton"
         aria-valuemin={min}
         aria-valuemax={max}
-        aria-valuenow={value}
+        aria-valuenow={draft === '' ? value : Number(draft)}
         value={draft}
+        onFocus={(event) => {
+          if (selectOnFocus) event.currentTarget.select();
+        }}
+        onClick={(event) => {
+          if (selectOnFocus) event.currentTarget.select();
+        }}
         onKeyDown={(event) => {
           if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
           event.preventDefault();
@@ -116,8 +128,8 @@ export default function Questionnaire({ answers, step, onChange, onStep, onCompl
       {step === 1 && <div className="space-y-7">
         <div><h2 className="font-data text-xl font-bold">這個家要容納誰？</h2><p className="body-copy mt-2 text-sm">最低房數會成為 Hard Gate，不會被其他高分抵銷。</p></div>
         <div className="grid gap-5 sm:grid-cols-2">
-          <NumericField label="預計居住人數" value={answers.residents} unit="人" min={1} max={8} onChange={(value) => update('residents', value)} />
-          <NumericField label="最低需要房數" value={answers.rooms} unit="房" min={1} max={5} onChange={(value) => update('rooms', value)} />
+          <NumericField label="預計居住人數" value={answers.residents} unit="人" min={1} max={9} selectOnFocus onChange={(value) => update('residents', value)} />
+          <NumericField label="最低需要房數" value={answers.rooms} unit="房" min={1} max={5} selectOnFocus onChange={(value) => update('rooms', value)} />
         </div>
         <div><p className="mb-3 text-sm font-bold">必要設備</p><div className="grid gap-3 sm:grid-cols-2">
           <Choice active={answers.elevator} onClick={() => update('elevator', !answers.elevator)}>電梯必須有<br /><small className="font-normal text-[#7f8fa6]">開啟後排除公寓及透天</small></Choice>
@@ -128,7 +140,7 @@ export default function Questionnaire({ answers, step, onChange, onStep, onCompl
       {step === 2 && <div className="space-y-7">
         <div><h2 className="font-data text-xl font-bold">主要通勤目的地在哪裡？</h2><p className="body-copy mt-2 text-sm">免費版使用生活圈距離級距估算，不是假裝成即時導航時間。</p></div>
         <div className="grid gap-3 sm:grid-cols-2">{hubs.map((hub) => <Choice key={hub} active={answers.commuteHub === hub} onClick={() => update('commuteHub', hub)}>{hub}</Choice>)}</div>
-        <NumericField label="可接受單程通勤時間" value={answers.maxCommute} unit="分鐘" min={10} max={90} step={5} onChange={(value) => update('maxCommute', value)} />
+        <NumericField label="可接受單程通勤時間" value={answers.maxCommute} unit="分鐘" min={10} max={90} step={5} selectOnFocus deferMinWhileEditing onChange={(value) => update('maxCommute', value)} />
         <div className="tech-panel-soft border-[#345b73] p-4 text-sm leading-6 text-[#a7def8]"><b className="font-data text-[#eef3f8]">可信度 B：</b>通勤為行政區級距推估。正式找房時仍應使用實際地址，在常用地圖服務確認尖峰時段路線。</div>
       </div>}
 

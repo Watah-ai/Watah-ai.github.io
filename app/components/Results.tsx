@@ -13,6 +13,8 @@ type Props = {
   onScenario: (kind: 'budget' | 'age' | 'commute' | 'rooms') => void;
 };
 
+const tenPointScore = (score: number) => (Math.min(100, Math.max(0, score)) / 10).toFixed(1);
+
 export default function Results({ answers, budget, recommendations, periodLabel, onEdit, onScenario }: Props) {
   const [expanded, setExpanded] = useState(0);
   const [copied, setCopied] = useState('');
@@ -55,13 +57,13 @@ export default function Results({ answers, budget, recommendations, periodLabel,
           const query = searchText(rec);
           return <article key={`${rec.district}-${rec.building}`} className="tech-panel overflow-hidden">
             <button className="grid w-full gap-4 p-5 text-left md:grid-cols-[76px_1fr_auto] md:items-center md:p-6" onClick={() => setExpanded(isOpen ? -1 : index)} aria-expanded={isOpen} aria-controls={detailsId}>
-              <div className="data-number flex h-[4.5rem] w-[4.5rem] items-center justify-center border border-[#ff6b57] bg-[#ff6b57]/8 text-2xl font-bold text-[#ff8b78]">{rec.total}</div>
+              <div className="data-number flex h-[4.5rem] w-[4.5rem] flex-col items-center justify-center border border-[#ff6b57] bg-[#ff6b57]/8 font-bold text-[#ff8b78]"><span className="text-2xl leading-none">{tenPointScore(rec.total)}</span><small className="mt-1 text-[10px] leading-none text-[#d8b2a7]">/ 10</small></div>
               <div><p className="font-data text-xs font-bold text-[#ff8b78]">RANK {String(index + 1).padStart(2, '0')}・可信度 {rec.confidence}</p><h3 className="font-data mt-2 text-xl font-bold">{rec.district}・{rec.building}{rec.rooms}房</h3><p className="body-copy mt-2 text-sm">成交中位 {rec.medianTotalWan.toLocaleString()} 萬｜中間50%約 {rec.lowTotalWan.toLocaleString()}–{rec.highTotalWan.toLocaleString()} 萬｜約 {rec.medianAreaPing} 坪</p></div>
               <span className="font-data text-sm font-bold text-[#72c7f2]">{isOpen ? '收起驗算 ↑' : '查看驗算 ↓'}</span>
             </button>
             {isOpen ? <div id={detailsId} className="border-t border-[#263246] bg-[#08101c] p-5 md:p-6">
               <div className="grid gap-7 lg:grid-cols-[1.2fr_.8fr]">
-                <div><h4 className="font-data font-bold">適配度驗算</h4><div className="mt-5 space-y-4">{rec.parts.map((part) => <div key={part.key} className="grid grid-cols-[90px_1fr_48px] items-center gap-3 text-xs"><span className="font-bold">{part.label}</span><div className="h-1.5 bg-[#1b2637]"><div className="h-full bg-[#ff6b57]" style={{ width: `${part.score}%` }} /></div><span className="data-number text-right text-[#72c7f2]">{part.score}</span></div>)}</div><p className="mt-5 text-xs leading-5 text-[#7f8fa6]">總分＝各指標分數 × 你的偏好權重。公開環境風險尚未接入，不參與本版排序。</p></div>
+                <div><h4 className="font-data font-bold">適配度評分</h4><div className="mt-5 space-y-4">{rec.parts.map((part) => <div key={part.key} className="grid grid-cols-[90px_1fr_48px] items-center gap-3 text-xs"><span className="font-bold">{part.label}</span><div className="h-1.5 bg-[#1b2637]"><div className="h-full bg-[#ff6b57]" style={{ width: `${part.score}%` }} /></div><span className="data-number text-right text-[#72c7f2]">{tenPointScore(part.score)}</span></div>)}</div><p className="mt-5 text-xs leading-5 text-[#7f8fa6]">總分＝各指標分數 × 你的偏好權重。10 分為相對適配程度，不代表成功率、房屋品質或購屋保證；公開環境風險尚未接入，不參與本版排序。</p></div>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1"><div className="tech-panel-soft border-[#416958] p-4 text-sm leading-6 text-[#b7dcc7]"><b className="font-data text-[#eef3f8]">推薦原因</b><br />{rec.reasons.join('；')}</div><div className="tech-panel-soft border-[#65473b] p-4 text-sm leading-6 text-[#d8b2a7]"><b className="font-data text-[#eef3f8]">主要犧牲</b><br />{rec.sacrifices.length ? rec.sacrifices.join('；') : '目前沒有明顯超出偏好的項目。'}</div></div>
               </div>
               <div className="mt-6 grid border-y border-[#263246] sm:grid-cols-4">{[

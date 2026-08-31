@@ -34,7 +34,7 @@ export function sanitizeAnswers(value: unknown, fallback: Answers): Answers {
     fixedExpense: boundedNumber(value.fixedExpense, fallback.fixedExpense, 0, 9999),
     loanYears: boundedNumber(value.loanYears, fallback.loanYears, 10, 40),
     interestRate: boundedNumber(value.interestRate, fallback.interestRate, 0, 10),
-    residents: boundedNumber(value.residents, fallback.residents, 1, 8),
+    residents: boundedNumber(value.residents, fallback.residents, 1, 9),
     rooms: boundedNumber(value.rooms, fallback.rooms, 1, 5),
     elevator: booleanValue(value.elevator, fallback.elevator),
     parking: booleanValue(value.parking, fallback.parking),
