@@ -27,7 +27,7 @@ export function sanitizeAnswers(value: unknown, fallback: Answers): Answers {
   const priorities = isRecord(value.priorities) ? value.priorities : {};
 
   return {
-    downPayment: boundedNumber(value.downPayment, fallback.downPayment, 0, 1_000_000),
+    downPayment: boundedNumber(value.downPayment, fallback.downPayment, 0, 999_999),
     reserve: boundedNumber(value.reserve, fallback.reserve, 0, 9999),
     monthlyIncome: boundedNumber(value.monthlyIncome, fallback.monthlyIncome, 0, 9999),
     monthlyDebt: boundedNumber(value.monthlyDebt, fallback.monthlyDebt, 0, 9999),
