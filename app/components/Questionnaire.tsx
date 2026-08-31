@@ -15,8 +15,8 @@ type Props = {
 const buildings: BuildingType[] = ['住宅大樓', '華廈', '公寓', '透天厝'];
 const hubs = ['市政府', '台中車站', '中科', '高鐵台中站', '豐原車站'];
 
-function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint, selectOnFocus = false, replaceOnFirstInput = false, deferMinWhileEditing = false, showStepper = false, onChange }: {
-  label: string; value: number; unit: string; min?: number; max?: number; step?: number; hint?: string; selectOnFocus?: boolean; replaceOnFirstInput?: boolean; deferMinWhileEditing?: boolean; showStepper?: boolean; onChange: (value: number) => void;
+function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint, integerOnly = false, selectOnFocus = false, replaceOnFirstInput = false, deferMinWhileEditing = false, showStepper = false, onChange }: {
+  label: string; value: number; unit: string; min?: number; max?: number; step?: number; hint?: string; integerOnly?: boolean; selectOnFocus?: boolean; replaceOnFirstInput?: boolean; deferMinWhileEditing?: boolean; showStepper?: boolean; onChange: (value: number) => void;
 }) {
   const fieldId = useId();
   const hintId = `${fieldId}-hint`;
@@ -44,7 +44,8 @@ function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint,
       return;
     }
 
-    if (!/^\d*(?:\.\d*)?$/.test(preparedValue)) return;
+    const validInput = integerOnly ? /^\d*$/.test(preparedValue) : /^\d*(?:\.\d*)?$/.test(preparedValue);
+    if (!validInput) return;
     replaceOnNextInputRef.current = false;
 
     const normalized = preparedValue === '.'
@@ -85,8 +86,8 @@ function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint,
         aria-describedby={hint ? hintId : undefined}
         className="data-number min-w-0 flex-1 bg-transparent py-3.5 text-base font-bold text-[#eef3f8] outline-none"
         type="text"
-        inputMode="decimal"
-        pattern="[0-9]*[.]?[0-9]*"
+        inputMode={integerOnly ? 'numeric' : 'decimal'}
+        pattern={integerOnly ? '[0-9]*' : '[0-9]*[.]?[0-9]*'}
         role="spinbutton"
         aria-valuemin={min}
         aria-valuemax={max}
@@ -160,8 +161,8 @@ export default function Questionnaire({ answers, step, onChange, onStep, onCompl
       {step === 1 && <div className="space-y-7">
         <div><h2 className="font-data text-xl font-bold">這個家要容納誰？</h2><p className="body-copy mt-2 text-sm">最低房數會成為 Hard Gate，不會被其他高分抵銷。</p></div>
         <div className="grid gap-5 sm:grid-cols-2">
-          <NumericField label="預計居住人數" value={answers.residents} unit="人" min={1} max={9} selectOnFocus replaceOnFirstInput showStepper onChange={(value) => update('residents', value)} />
-          <NumericField label="最低需要房數" value={answers.rooms} unit="房" min={1} max={5} selectOnFocus replaceOnFirstInput showStepper onChange={(value) => update('rooms', value)} />
+          <NumericField label="預計居住人數" value={answers.residents} unit="人" min={1} max={9} integerOnly selectOnFocus replaceOnFirstInput showStepper onChange={(value) => update('residents', value)} />
+          <NumericField label="最低需要房數" value={answers.rooms} unit="房" min={1} max={5} integerOnly selectOnFocus replaceOnFirstInput showStepper onChange={(value) => update('rooms', value)} />
         </div>
         <div><p className="mb-3 text-sm font-bold">必要設備</p><div className="grid gap-3 sm:grid-cols-2">
           <Choice active={answers.elevator} onClick={() => update('elevator', !answers.elevator)}>電梯必須有<br /><small className="font-normal text-[#7f8fa6]">開啟後排除公寓及透天</small></Choice>

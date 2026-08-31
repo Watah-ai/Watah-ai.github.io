@@ -13,6 +13,12 @@ function boundedNumber(value: unknown, fallback: number, min: number, max: numbe
     : fallback;
 }
 
+function boundedInteger(value: unknown, fallback: number, min: number, max: number) {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, Math.round(value)))
+    : fallback;
+}
+
 function booleanValue(value: unknown, fallback: boolean) {
   return typeof value === 'boolean' ? value : fallback;
 }
@@ -34,8 +40,8 @@ export function sanitizeAnswers(value: unknown, fallback: Answers): Answers {
     fixedExpense: boundedNumber(value.fixedExpense, fallback.fixedExpense, 0, 9999),
     loanYears: boundedNumber(value.loanYears, fallback.loanYears, 10, 40),
     interestRate: boundedNumber(value.interestRate, fallback.interestRate, 0, 10),
-    residents: boundedNumber(value.residents, fallback.residents, 1, 9),
-    rooms: boundedNumber(value.rooms, fallback.rooms, 1, 5),
+    residents: boundedInteger(value.residents, fallback.residents, 1, 9),
+    rooms: boundedInteger(value.rooms, fallback.rooms, 1, 5),
     elevator: booleanValue(value.elevator, fallback.elevator),
     parking: booleanValue(value.parking, fallback.parking),
     buildings: buildings.length > 0 ? buildings : fallback.buildings,
