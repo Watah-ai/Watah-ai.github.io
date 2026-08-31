@@ -438,7 +438,6 @@ input:focus-visible {
 }
 
 .control-shell-with-stepper {
-  min-height: 5.5rem;
   overflow: hidden;
   padding-right: 0;
 }
@@ -446,14 +445,14 @@ input:focus-visible {
 .numeric-stepper {
   align-self: stretch;
   display: grid;
-  grid-template-rows: repeat(2, minmax(44px, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   margin-left: 0.75rem;
   border-left: 1px solid var(--rule);
 }
 
 .numeric-stepper-button {
   display: flex;
-  min-height: 44px;
+  min-height: 0;
   min-width: 44px;
   align-items: center;
   justify-content: center;
