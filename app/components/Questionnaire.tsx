@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import type { Answers, BuildingType } from '../types';
 
 type Props = {
@@ -15,25 +15,41 @@ type Props = {
 const buildings: BuildingType[] = ['住宅大樓', '華廈', '公寓', '透天厝'];
 const hubs = ['市政府', '台中車站', '中科', '高鐵台中站', '豐原車站'];
 
-function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint, selectOnFocus = false, deferMinWhileEditing = false, onChange }: {
-  label: string; value: number; unit: string; min?: number; max?: number; step?: number; hint?: string; selectOnFocus?: boolean; deferMinWhileEditing?: boolean; onChange: (value: number) => void;
+function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint, selectOnFocus = false, replaceOnFirstInput = false, deferMinWhileEditing = false, showStepper = false, onChange }: {
+  label: string; value: number; unit: string; min?: number; max?: number; step?: number; hint?: string; selectOnFocus?: boolean; replaceOnFirstInput?: boolean; deferMinWhileEditing?: boolean; showStepper?: boolean; onChange: (value: number) => void;
 }) {
   const fieldId = useId();
   const hintId = `${fieldId}-hint`;
   const [draft, setDraft] = useState(String(value));
+  const replaceOnNextInputRef = useRef(false);
+  const focusedDraftRef = useRef('');
 
   const updateDraft = (rawValue: string) => {
-    if (rawValue === '') {
+    let preparedValue = rawValue;
+
+    if (replaceOnFirstInput && replaceOnNextInputRef.current && rawValue !== '') {
+      const focusedDraft = focusedDraftRef.current;
+      if (rawValue.startsWith(focusedDraft) && rawValue.length > focusedDraft.length) {
+        preparedValue = rawValue.slice(focusedDraft.length);
+      }
+    }
+
+    if (preparedValue === '') {
       setDraft(deferMinWhileEditing ? '' : String(min));
       onChange(min);
+      if (replaceOnFirstInput) {
+        replaceOnNextInputRef.current = true;
+        focusedDraftRef.current = String(min);
+      }
       return;
     }
 
-    if (!/^\d*(?:\.\d*)?$/.test(rawValue)) return;
+    if (!/^\d*(?:\.\d*)?$/.test(preparedValue)) return;
+    replaceOnNextInputRef.current = false;
 
-    const normalized = rawValue === '.'
+    const normalized = preparedValue === '.'
       ? '0.'
-      : rawValue.replace(/^0+(?=\d)/, '');
+      : preparedValue.replace(/^0+(?=\d)/, '');
     const nextValue = Number(normalized);
     if (!Number.isFinite(nextValue)) return;
 
@@ -48,9 +64,22 @@ function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint,
     onChange(boundedValue);
   };
 
-  return <label htmlFor={fieldId} className="block">
-    <span className="text-sm font-bold text-[#dce5ee]">{label}</span>
-    <span className="control-shell">
+  const applyStep = (direction: 1 | -1) => {
+    const steppedValue = Number((value + direction * step).toFixed(10));
+    const nextValue = Math.min(max, Math.max(min, steppedValue));
+    setDraft(String(nextValue));
+    onChange(nextValue);
+  };
+
+  const armFirstInputReplacement = () => {
+    if (!replaceOnFirstInput) return;
+    replaceOnNextInputRef.current = true;
+    focusedDraftRef.current = draft;
+  };
+
+  return <div className="block">
+    <label htmlFor={fieldId} className="text-sm font-bold text-[#dce5ee]">{label}</label>
+    <div className={`control-shell${showStepper ? ' control-shell-with-stepper' : ''}`}>
       <input
         id={fieldId}
         aria-describedby={hint ? hintId : undefined}
@@ -64,27 +93,30 @@ function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint,
         aria-valuenow={draft === '' ? value : Number(draft)}
         value={draft}
         onFocus={(event) => {
+          armFirstInputReplacement();
           if (selectOnFocus) event.currentTarget.select();
         }}
         onClick={(event) => {
+          armFirstInputReplacement();
           if (selectOnFocus) event.currentTarget.select();
         }}
         onKeyDown={(event) => {
           if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
           event.preventDefault();
           const direction = event.key === 'ArrowUp' ? 1 : -1;
-          const steppedValue = Number((value + direction * step).toFixed(10));
-          const nextValue = Math.min(max, Math.max(min, steppedValue));
-          setDraft(String(nextValue));
-          onChange(nextValue);
+          applyStep(direction);
         }}
         onChange={(event) => updateDraft(event.target.value)}
         onBlur={() => setDraft(String(value))}
       />
       <span className="font-data text-xs font-bold text-[#94a3b8]">{unit}</span>
-    </span>
+      {showStepper ? <span className="numeric-stepper">
+        <button type="button" className="numeric-stepper-button" aria-label={`增加 ${step} ${unit}`} disabled={value >= max} onClick={() => applyStep(1)}><span aria-hidden="true">▲</span></button>
+        <button type="button" className="numeric-stepper-button" aria-label={`減少 ${step} ${unit}`} disabled={value <= min} onClick={() => applyStep(-1)}><span aria-hidden="true">▼</span></button>
+      </span> : null}
+    </div>
     {hint ? <small id={hintId} className="mt-2 block leading-5 text-[#7f8fa6]">{hint}</small> : null}
-  </label>;
+  </div>;
 }
 
 function Choice({ active, children, onClick }: { active: boolean; children: React.ReactNode; onClick: () => void }) {
@@ -118,7 +150,7 @@ export default function Questionnaire({ answers, step, onChange, onStep, onCompl
           <NumericField label="每月其他貸款還款" value={answers.monthlyDebt} unit="萬元" step={0.1} onChange={(value) => update('monthlyDebt', value)} />
           <NumericField label="每月固定生活支出" value={answers.fixedExpense} unit="萬元" step={0.1} onChange={(value) => update('fixedExpense', value)} />
           <div className="grid grid-cols-2 gap-3">
-            <NumericField label="貸款年期" value={answers.loanYears} unit="年" min={10} max={40} onChange={(value) => update('loanYears', value)} />
+            <NumericField label="貸款年期" value={answers.loanYears} unit="年" min={10} max={40} step={5} showStepper onChange={(value) => update('loanYears', value)} />
             <NumericField label="利率假設" value={answers.interestRate} unit="%" min={0} max={10} step={0.1} onChange={(value) => update('interestRate', value)} />
           </div>
         </div>
@@ -128,8 +160,8 @@ export default function Questionnaire({ answers, step, onChange, onStep, onCompl
       {step === 1 && <div className="space-y-7">
         <div><h2 className="font-data text-xl font-bold">這個家要容納誰？</h2><p className="body-copy mt-2 text-sm">最低房數會成為 Hard Gate，不會被其他高分抵銷。</p></div>
         <div className="grid gap-5 sm:grid-cols-2">
-          <NumericField label="預計居住人數" value={answers.residents} unit="人" min={1} max={9} selectOnFocus onChange={(value) => update('residents', value)} />
-          <NumericField label="最低需要房數" value={answers.rooms} unit="房" min={1} max={5} selectOnFocus onChange={(value) => update('rooms', value)} />
+          <NumericField label="預計居住人數" value={answers.residents} unit="人" min={1} max={9} selectOnFocus replaceOnFirstInput showStepper onChange={(value) => update('residents', value)} />
+          <NumericField label="最低需要房數" value={answers.rooms} unit="房" min={1} max={5} selectOnFocus replaceOnFirstInput showStepper onChange={(value) => update('rooms', value)} />
         </div>
         <div><p className="mb-3 text-sm font-bold">必要設備</p><div className="grid gap-3 sm:grid-cols-2">
           <Choice active={answers.elevator} onClick={() => update('elevator', !answers.elevator)}>電梯必須有<br /><small className="font-normal text-[#7f8fa6]">開啟後排除公寓及透天</small></Choice>
@@ -140,7 +172,7 @@ export default function Questionnaire({ answers, step, onChange, onStep, onCompl
       {step === 2 && <div className="space-y-7">
         <div><h2 className="font-data text-xl font-bold">主要通勤目的地在哪裡？</h2><p className="body-copy mt-2 text-sm">免費版使用生活圈距離級距估算，不是假裝成即時導航時間。</p></div>
         <div className="grid gap-3 sm:grid-cols-2">{hubs.map((hub) => <Choice key={hub} active={answers.commuteHub === hub} onClick={() => update('commuteHub', hub)}>{hub}</Choice>)}</div>
-        <NumericField label="可接受單程通勤時間" value={answers.maxCommute} unit="分鐘" min={10} max={90} step={5} selectOnFocus deferMinWhileEditing onChange={(value) => update('maxCommute', value)} />
+        <NumericField label="可接受單程通勤時間" value={answers.maxCommute} unit="分鐘" min={10} max={90} step={5} selectOnFocus deferMinWhileEditing showStepper onChange={(value) => update('maxCommute', value)} />
         <div className="tech-panel-soft border-[#345b73] p-4 text-sm leading-6 text-[#a7def8]"><b className="font-data text-[#eef3f8]">可信度 B：</b>通勤為行政區級距推估。正式找房時仍應使用實際地址，在常用地圖服務確認尖峰時段路線。</div>
       </div>}
 
@@ -148,7 +180,7 @@ export default function Questionnaire({ answers, step, onChange, onStep, onCompl
         <div><h2 className="font-data text-xl font-bold">你願意接受哪些房屋？</h2><p className="body-copy mt-2 text-sm">至少選擇一種建物類型。</p></div>
         <div className="grid gap-3 sm:grid-cols-2">{buildings.map((building) => <Choice key={building} active={answers.buildings.includes(building)} onClick={() => update('buildings', answers.buildings.includes(building) ? answers.buildings.filter((item) => item !== building) : [...answers.buildings, building])}>{building}</Choice>)}</div>
         {answers.buildings.length === 0 ? <p id="continue-help" role="alert" className="text-sm font-bold text-[#ffb29f]">請至少選擇一種建物類型，才能繼續。</p> : null}
-        <NumericField label="可接受最高屋齡" value={answers.maxAge} unit="年" min={0} max={60} step={5} onChange={(value) => update('maxAge', value)} hint="屋齡資料不足的組合會標示為待確認，不會被當成已知新屋。" />
+        <NumericField label="可接受最高屋齡" value={answers.maxAge} unit="年" min={0} max={60} step={5} showStepper onChange={(value) => update('maxAge', value)} hint="屋齡資料不足的組合會標示為待確認，不會被當成已知新屋。" />
       </div>}
 
       {step === 4 && <div className="space-y-7">
