@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import type { Answers, BuildingType } from '../types';
 
 type Props = {
@@ -20,6 +20,28 @@ function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint,
 }) {
   const fieldId = useId();
   const hintId = `${fieldId}-hint`;
+  const [draft, setDraft] = useState(String(value));
+
+  const updateDraft = (rawValue: string) => {
+    if (rawValue === '') {
+      setDraft(String(min));
+      onChange(min);
+      return;
+    }
+
+    if (!/^\d*(?:\.\d*)?$/.test(rawValue)) return;
+
+    const normalized = rawValue === '.'
+      ? '0.'
+      : rawValue.replace(/^0+(?=\d)/, '');
+    const nextValue = Number(normalized);
+    if (!Number.isFinite(nextValue)) return;
+
+    const boundedValue = Math.min(max, Math.max(min, nextValue));
+    setDraft(boundedValue === nextValue ? normalized : String(boundedValue));
+    onChange(boundedValue);
+  };
+
   return <label htmlFor={fieldId} className="block">
     <span className="text-sm font-bold text-[#dce5ee]">{label}</span>
     <span className="control-shell">
@@ -27,21 +49,25 @@ function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint,
         id={fieldId}
         aria-describedby={hint ? hintId : undefined}
         className="data-number min-w-0 flex-1 bg-transparent py-3.5 text-base font-bold text-[#eef3f8] outline-none"
-        type="number"
+        type="text"
         inputMode="decimal"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
+        pattern="[0-9]*[.]?[0-9]*"
+        role="spinbutton"
+        aria-valuemin={min}
+        aria-valuemax={max}
+        aria-valuenow={value}
+        value={draft}
         onKeyDown={(event) => {
-          if (value !== 0 || event.ctrlKey || event.metaKey || event.altKey || !/^\d$/.test(event.key)) return;
+          if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
           event.preventDefault();
-          onChange(Math.min(max, Math.max(min, Number(event.key))));
+          const direction = event.key === 'ArrowUp' ? 1 : -1;
+          const steppedValue = Number((value + direction * step).toFixed(10));
+          const nextValue = Math.min(max, Math.max(min, steppedValue));
+          setDraft(String(nextValue));
+          onChange(nextValue);
         }}
-        onChange={(event) => {
-          const nextValue = Number(event.target.value);
-          if (Number.isFinite(nextValue)) onChange(Math.min(max, Math.max(min, nextValue)));
-        }}
+        onChange={(event) => updateDraft(event.target.value)}
+        onBlur={() => setDraft(String(value))}
       />
       <span className="font-data text-xs font-bold text-[#94a3b8]">{unit}</span>
     </span>
