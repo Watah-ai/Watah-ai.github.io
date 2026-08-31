@@ -40,9 +40,10 @@ export default function Results({ answers, budget, recommendations, periodLabel,
           <div className="flex items-center justify-between gap-3"><p className="text-sm font-bold text-[#eef3f8]">{item.label}</p><span className="font-data text-[10px] tracking-[.16em]">{item.code}</span></div>
           <p className="data-number mt-5 text-3xl font-bold">{item.value.toLocaleString()} <small className="text-sm">萬</small></p>
           <p className="mt-2 text-xs text-[#94a3b8]">估計本息月付 <span className="data-number">{item.payment.toFixed(1)} 萬/月</span></p>
+          <p className="mt-2 text-[10px] font-bold tracking-wide text-[#7f8fa6]">{item.value >= 4_000 ? '高價住宅・最高貸款 3 成' : '一般首購情境・最高貸款 8 成'}</p>
         </article>)}
       </section>
-      <p className="mt-4 max-w-5xl text-xs leading-6 text-[#7f8fa6]">假設貸款{answers.loanYears}年、年利率{answers.interestRate}%、最高貸款成數80%，並從自備款中保留{answers.reserve}萬元及30萬元基本交易成本。這是情境試算，不代表銀行核貸。</p>
+      <p className="mt-4 max-w-5xl text-xs leading-6 text-[#7f8fa6]">假設貸款{answers.loanYears}年、年利率{answers.interestRate}%，並從自備款中保留{answers.reserve}萬元及30萬元基本交易成本。未滿4,000萬元採最高8成的首購情境；達4,000萬元時，依臺中高價住宅規則改採最高3成且無寬限期。本站以試算總價初步判斷，實際應以銀行鑑價或買賣金額孰低及個案核貸為準。<a className="ml-1 text-[#72c7f2] underline decoration-[#385269] underline-offset-2 hover:text-white" href="https://www.cbc.gov.tw/tw/cp-4223-124873-79d4c-1.html" target="_blank" rel="noreferrer">中央銀行規定 ↗</a></p>
 
       <section className="scroll-focus-zone scroll-tone-dark mt-14 py-4" data-scroll-focus data-scroll-active="false">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#263246] pb-5"><h2 className="font-data text-2xl font-bold">推薦 Top {recommendations.length}</h2><span className="rounded-md border border-[#416958] px-3 py-1.5 font-data text-xs font-bold text-[#b7dcc7]">✓ Hard Gate 已套用</span></div>

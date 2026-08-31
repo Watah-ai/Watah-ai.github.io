@@ -100,7 +100,7 @@ export default function Questionnaire({ answers, step, onChange, onStep, onCompl
       {step === 0 && <div className="space-y-6">
         <div><h2 className="font-data text-xl font-bold">先確認安全購屋範圍</h2><p className="body-copy mt-2 max-w-2xl text-sm">所有金額都能修改。系統會保留緊急預備金與基本交易成本，再推算三段預算。</p></div>
         <div className="grid gap-5 sm:grid-cols-2">
-          <NumericField label="目前可用自備款" value={answers.downPayment} unit="萬元" onChange={(value) => update('downPayment', value)} />
+          <NumericField label="目前可用自備款" value={answers.downPayment} unit="萬元" max={1_000_000} onChange={(value) => update('downPayment', value)} />
           <NumericField label="希望保留的緊急資金" value={answers.reserve} unit="萬元" onChange={(value) => update('reserve', value)} />
           <NumericField label="家庭每月稅後收入" value={answers.monthlyIncome} unit="萬元" step={0.1} onChange={(value) => update('monthlyIncome', value)} />
           <NumericField label="每月其他貸款還款" value={answers.monthlyDebt} unit="萬元" step={0.1} onChange={(value) => update('monthlyDebt', value)} />

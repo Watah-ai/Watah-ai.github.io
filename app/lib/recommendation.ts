@@ -1,6 +1,8 @@
 import type { Answers, Budget, MarketProfile, Recommendation } from '../types';
 
 const clamp = (value: number, min = 0, max = 100) => Math.max(min, Math.min(max, value));
+const HIGH_VALUE_HOME_THRESHOLD_WAN = 4_000;
+const STANDARD_MAX_PRICE_WAN = HIGH_VALUE_HOME_THRESHOLD_WAN - 1;
 
 function presentValue(monthlyPaymentWan: number, annualRate: number, years: number) {
   const monthlyRate = annualRate / 100 / 12;
@@ -26,7 +28,15 @@ export function calculateBudget(answers: Answers): Budget {
   );
   const priceAt = (payment: number) => {
     const loan = presentValue(payment, answers.interestRate, answers.loanYears);
-    return Math.max(Math.min(loan + availableCash, availableCash / 0.2), 0);
+    const standardPrice = Math.max(Math.min(loan + availableCash, availableCash / 0.2), 0);
+    if (standardPrice < HIGH_VALUE_HOME_THRESHOLD_WAN) {
+      return Math.min(standardPrice, STANDARD_MAX_PRICE_WAN);
+    }
+
+    const highValuePrice = Math.max(Math.min(loan + availableCash, availableCash / 0.7), 0);
+    return highValuePrice >= HIGH_VALUE_HOME_THRESHOLD_WAN
+      ? highValuePrice
+      : STANDARD_MAX_PRICE_WAN;
   };
 
   const comfortablePayment = paymentAt(0.35, 0.55);
