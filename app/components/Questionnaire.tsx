@@ -23,10 +23,26 @@ function NumericField({ label, value, unit, min = 0, max = 9999, step = 1, hint,
   return <label htmlFor={fieldId} className="block">
     <span className="text-sm font-bold text-[#dce5ee]">{label}</span>
     <span className="control-shell">
-      <input id={fieldId} aria-describedby={hint ? hintId : undefined} className="data-number min-w-0 flex-1 bg-transparent py-3.5 text-base font-bold text-[#eef3f8] outline-none" type="number" inputMode="decimal" min={min} max={max} step={step} value={value} onChange={(event) => {
-        const nextValue = Number(event.target.value);
-        if (Number.isFinite(nextValue)) onChange(Math.min(max, Math.max(min, nextValue)));
-      }} />
+      <input
+        id={fieldId}
+        aria-describedby={hint ? hintId : undefined}
+        className="data-number min-w-0 flex-1 bg-transparent py-3.5 text-base font-bold text-[#eef3f8] outline-none"
+        type="number"
+        inputMode="decimal"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onKeyDown={(event) => {
+          if (value !== 0 || event.ctrlKey || event.metaKey || event.altKey || !/^\d$/.test(event.key)) return;
+          event.preventDefault();
+          onChange(Math.min(max, Math.max(min, Number(event.key))));
+        }}
+        onChange={(event) => {
+          const nextValue = Number(event.target.value);
+          if (Number.isFinite(nextValue)) onChange(Math.min(max, Math.max(min, nextValue)));
+        }}
+      />
       <span className="font-data text-xs font-bold text-[#94a3b8]">{unit}</span>
     </span>
     {hint ? <small id={hintId} className="mt-2 block leading-5 text-[#7f8fa6]">{hint}</small> : null}
